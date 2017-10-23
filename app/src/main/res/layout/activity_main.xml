@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <com.newventuresoftware.waveform.WaveformView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:mode="PLAYBACK"
+        app:waveformStrokeThickness="3"
+        app:waveformColor="#e5dc33"
+        app:waveformFillColor="#e93519"
+        android:background="#000000"
+        android:id="@+id/playbackWaveformView" />
+
+    <ToggleButton
+        android:id="@+id/recordBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="startRecording"
+        android:text="@string/start_recording"
+        android:textOff="@string/start_recording"
+        android:textOn="@string/stop_recording"
+        android:layout_marginTop="75dp"
+        android:layout_marginRight="16dp"/>
+
+    <Button
+        android:id="@+id/playBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="startPlaying"
+        android:text="@string/play"
+        android:layout_marginTop="76dp"
+        android:layout_marginRight="16dp"/>
+</LinearLayout>
+
+
