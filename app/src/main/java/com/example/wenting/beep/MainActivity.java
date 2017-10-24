@@ -20,6 +20,7 @@ import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -41,6 +42,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final WaveformView mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
+
+        try {
+            mAudioFile = createAudioFile(this, "demo");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void setWaveformView() {
         final WaveformView mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
         short[] samples = null;
@@ -78,19 +90,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-        try {
-            mAudioFile = createAudioFile(this, "demo");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-
     }
 
     private short[] getAudioSample() throws IOException{
-        InputStream is = getResources().openRawResource(R.raw.jinglebells);
+        InputStream is = new FileInputStream(mAudioFile);
         byte[] data;
         try {
             data = IOUtils.toByteArray(is);
@@ -155,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startPlaying(View view) {
+        setWaveformView();
         mPlayer = new MediaPlayer();
         try {
             mPlayer.setDataSource(mAudioFile.getAbsolutePath());
