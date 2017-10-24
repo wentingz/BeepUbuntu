@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.newventuresoftware.waveform.WaveformView;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (samples != null) {
+            final Button playButt = (Button) findViewById(R.id.playButt);
+
             mPlaybackThread = new PlaybackThread(samples, new PlaybackListener() {
                 @Override
                 public void onProgress(int progress) {
@@ -63,6 +66,17 @@ public class MainActivity extends AppCompatActivity {
             mPlaybackView.setChannels(1);
             mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
             mPlaybackView.setSamples(samples);
+
+            playButt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!mPlaybackThread.playing()) {
+                        mPlaybackThread.startPlayback();
+                    } else {
+                        mPlaybackThread.stopPlayback();
+                    }
+                }
+            });
         }
 
         try {
@@ -70,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+
     }
 
     private short[] getAudioSample() throws IOException{

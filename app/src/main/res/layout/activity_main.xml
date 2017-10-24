@@ -24,18 +24,22 @@
         android:onClick="startRecording"
         android:text="@string/start_recording"
         android:textOff="@string/start_recording"
-        android:textOn="@string/stop_recording"
-        android:layout_marginTop="75dp"
-        android:layout_marginRight="16dp"/>
+        android:textOn="@string/stop_recording" />
 
     <Button
         android:id="@+id/playBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="startPlaying"
-        android:text="@string/play"
-        android:layout_marginTop="76dp"
-        android:layout_marginRight="16dp"/>
+        android:text="@string/play" />
+
+    <Button
+        android:id="@+id/playButt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="startPlaying"
+        android:text="@string/playButton" />
+
 </LinearLayout>
 
 
