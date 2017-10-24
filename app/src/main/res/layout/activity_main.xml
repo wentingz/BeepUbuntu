@@ -37,7 +37,6 @@
         android:id="@+id/playButt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="startPlaying"
         android:text="@string/playButton" />
 
 </LinearLayout>
