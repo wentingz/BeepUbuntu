@@ -37,12 +37,28 @@ public class MainActivity extends AppCompatActivity {
 
     boolean isRecording = false;
 
+    WaveformView mPlaybackView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final WaveformView mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
+        mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
+
+        final Button playButt = (Button) findViewById(R.id.playButt);
+
+        playButt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mPlaybackThread.playing()) {
+                    mPlaybackThread.startPlayback();
+                } else {
+                    mPlaybackThread.stopPlayback();
+                }
+            }
+        });
 
         try {
             mAudioFile = createAudioFile(this, "demo");
@@ -53,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setWaveformView() {
-        final WaveformView mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
         short[] samples = null;
         try {
@@ -63,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (samples != null) {
-            final Button playButt = (Button) findViewById(R.id.playButt);
+
 
             mPlaybackThread = new PlaybackThread(samples, new PlaybackListener() {
                 @Override
@@ -79,16 +94,7 @@ public class MainActivity extends AppCompatActivity {
             mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
             mPlaybackView.setSamples(samples);
 
-            playButt.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!mPlaybackThread.playing()) {
-                        mPlaybackThread.startPlayback();
-                    } else {
-                        mPlaybackThread.stopPlayback();
-                    }
-                }
-            });
+            mPlaybackView.invalidate();
         }
     }
 
