@@ -1,22 +1,15 @@
 package com.example.wenting.beep;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
-
+import android.support.design.widget.Snackbar;
+import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
-
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -29,15 +22,13 @@ import java.nio.ShortBuffer;
 
 public class MainActivity extends AppCompatActivity {
     private PlaybackThread mPlaybackThread;
-
-    private MediaRecorder mRecorder = null;
-    private MediaPlayer mPlayer = null;
+    private RecordingThread mRecordingThread;
 
     File mAudioFile;
 
-    boolean isRecording = false;
-
     WaveformView mPlaybackView;
+
+    private static final int REQUEST_RECORD_AUDIO = 13;
 
 
     @Override
@@ -47,7 +38,27 @@ public class MainActivity extends AppCompatActivity {
 
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
-        final Button playButt = (Button) findViewById(R.id.playButt);
+        final ToggleButton playButt = (ToggleButton) findViewById(R.id.playBtn);
+
+        final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
+
+
+        mRecordingThread = new RecordingThread(this);
+
+
+
+        recordButt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mRecordingThread.recording()) {
+                    startAudioRecordingSafe();
+                } else {
+                    mRecordingThread.stopRecording();
+                    setWaveformView();
+                }
+            }
+        });
+
 
         playButt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,12 +71,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        try {
-            mAudioFile = createAudioFile(this, "demo");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
+    }
+
+    private void startAudioRecordingSafe() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            mRecordingThread.startRecording();
+        } else {
+            requestMicrophonePermission();
+        }
+    }
+
+    private void requestMicrophonePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.RECORD_AUDIO)) {
+            // Show dialog explaining why we need record audio
+            Snackbar.make(mPlaybackView, "Microphone access is required in order to record audio",
+                    Snackbar.LENGTH_LONG).setAction("OK", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                            android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
+                }
+            }).show();
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                    android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
+        }
     }
 
     private void setWaveformView() {
@@ -99,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private short[] getAudioSample() throws IOException{
+        mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
         InputStream is = new FileInputStream(mAudioFile);
         byte[] data;
         try {
@@ -115,143 +148,5 @@ public class MainActivity extends AppCompatActivity {
         return samples;
     }
 
-
-    private static File createAudioFile(Context context, String audioName) throws IOException {
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PODCASTS);
-        File audio = File.createTempFile(
-                audioName,  /* prefix */
-                ".MPEG_4",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        return audio;
-    }
-
-    public void startRecording(View view) {
-        requestAudioPermissions();
-    }
-
-    private void recordAudio() {
-        if (mRecorder == null) {
-            mRecorder = new MediaRecorder();
-            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mRecorder.setOutputFile(mAudioFile.getAbsolutePath());
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        }
-
-        if (!isRecording) {
-            try {
-                mRecorder.prepare();
-                mRecorder.start();
-                isRecording = true;
-            } catch (IOException e) {
-                Log.e("Audio", "prepare() failed");
-            }
-        } else if (isRecording) {
-            isRecording = false;
-            stopRecording();
-        }
-    }
-
-    public void stopRecording() {
-        if (mRecorder != null) {
-            mRecorder.stop();
-            mRecorder.reset();
-            mRecorder.release();
-            mRecorder = null;
-        }
-    }
-
-    public void startPlaying(View view) {
-        setWaveformView();
-        mPlayer = new MediaPlayer();
-        try {
-            mPlayer.setDataSource(mAudioFile.getAbsolutePath());
-            mPlayer.prepare();
-            mPlayer.start();
-        } catch (IOException e) {
-            Log.e("Audio", "prepare() failed");
-        }
-    }
-
-    public void stopPlaying() {
-        if (mPlayer != null) {
-            mPlayer.release();
-            mPlayer = null;
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-
-        if (mPlayer != null) {
-            stopPlaying();
-        }
-
-        if (mRecorder != null) {
-            stopRecording();
-        }
-
-        super.onDestroy();
-    }
-
-    //Requesting run-time permissions
-
-    //Create placeholder for user's consent to record_audio permission.
-    //This will be used in handling callback
-    private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
-
-    private void requestAudioPermissions() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            //When permission is not granted by user, show them message why this permission is needed.
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.RECORD_AUDIO)) {
-                Toast.makeText(this, "Please grant permissions to record audio", Toast.LENGTH_LONG).show();
-
-                //Give user option to still opt-in the permissions
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        MY_PERMISSIONS_RECORD_AUDIO);
-
-            } else {
-                // Show user dialog to grant permission to record audio
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        MY_PERMISSIONS_RECORD_AUDIO);
-            }
-        }
-        //If permission is granted, then go ahead recording audio
-        else if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            //Go ahead with recording audio now
-            recordAudio();
-        }
-    }
-
-    //Handling callback
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_RECORD_AUDIO: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay!
-                    recordAudio();
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(this, "Permissions Denied to record audio", Toast.LENGTH_LONG).show();
-                }
-                return;
-            }
-        }
-    }
 }
 

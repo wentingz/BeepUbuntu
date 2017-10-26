@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">AudioRuntimePermissions</string>
+    <string name="app_name">Beep</string>
     <string name="start_recording">Start Recording</string>
     <string name="stop_recording">Stop Recording</string>
-    <string name="play">Play</string>
-    <string name="playButton">PlayButton</string>
+    <string name="start_playing">Start Playing</string>
+    <string name="stop_playing">Stop Playing</string>
+
 </resources>
