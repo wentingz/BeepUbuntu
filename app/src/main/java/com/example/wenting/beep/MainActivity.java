@@ -1,7 +1,6 @@
 package com.example.wenting.beep;
 
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -9,6 +8,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.support.design.widget.Snackbar;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
+import static java.util.Arrays.copyOfRange;
+
 public class MainActivity extends AppCompatActivity {
     private PlaybackThread mPlaybackThread;
     private RecordingThread mRecordingThread;
@@ -33,22 +35,35 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_RECORD_AUDIO = 13;
 
+    RangeSeekBar<Integer> rangeSeekBar;
+
+    short[] sampleGlobal;
+    short[] currentSample;
+    byte[]  sampleByte;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        rangeSeekBar = new RangeSeekBar<>(this);
+        rangeSeekBar.setRangeValues(0, 100);
+
+
+        FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
+        layout.addView(rangeSeekBar);
+
+
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
-        final ToggleButton playButt = (ToggleButton) findViewById(R.id.playBtn);
+        final Button playButt = (Button) findViewById(R.id.playBtn);
 
         final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
         final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBeep);
 
         mRecordingThread = new RecordingThread(this);
-
 
 
         recordButt.setOnClickListener(new View.OnClickListener() {
@@ -58,15 +73,21 @@ public class MainActivity extends AppCompatActivity {
                     startAudioRecordingSafe();
                 } else {
                     mRecordingThread.stopRecording();
-                    setWaveformView();
+                    try {
+                        getAudioSample();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    setWaveformView(currentSample);
                 }
             }
         });
 
-
         playButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                updatePlaySample(currentSample);
                 if (!mPlaybackThread.playing()) {
                     mPlaybackThread.startPlayback();
                 } else {
@@ -78,25 +99,88 @@ public class MainActivity extends AppCompatActivity {
         beepBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                short[] newSample = null;
                 try {
-                    newSample = getBeepedAudio(0, 100000);
+                    int start = rangeSeekBar.getSelectedMinValue();
+                    int end = rangeSeekBar.getSelectedMaxValue();
+                    getBeepedAudio(start, end);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                updateWaveformView(newSample);
+                setWaveformView(currentSample);
+                rangeSeekBar.setSelectedMaxValue(100);
+                rangeSeekBar.setSelectedMinValue(0);
             }
         });
 
-
-        RangeSeekBar<Integer> rangeSeekBar = new RangeSeekBar<>(this);
-        rangeSeekBar.setRangeValues(0, 100);
-
-
-        FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
-        layout.addView(rangeSeekBar);
-
     }
+
+    private void updatePlaySample(short[] samples) {
+        if (samples != null) {
+            int start = rangeSeekBar.getSelectedMinValue();
+            int end = rangeSeekBar.getSelectedMaxValue();
+            int startIndex = Math.round(samples.length * start / 100);
+            int endIndex = Math.round(samples.length * end / 100);
+
+            short[] playbackShort = copyOfRange(samples, startIndex, endIndex);
+            mPlaybackThread = new PlaybackThread(playbackShort, new PlaybackListener() {
+                @Override
+                public void onProgress(int progress) {
+                    mPlaybackView.setMarkerPosition(progress);
+                }
+
+                @Override
+                public void onCompletion() {
+                    mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
+
+                }
+            });
+        }
+    }
+
+    private void setWaveformView(short[] samples) {
+        if (samples != null) {
+            mPlaybackView.setChannels(1);
+            mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
+            mPlaybackView.setSamples(samples);
+
+            mPlaybackView.invalidate();
+        }
+    }
+
+
+    private void getBeepedAudio(int start, int end) throws IOException {
+        int startIndex = Math.round(sampleByte.length * start / 100);
+        int endIndex = Math.round(sampleByte.length * end / 100);
+        for (int i = startIndex; i < endIndex; i++) {
+            sampleByte[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
+        }
+
+        ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        short[] samples = new short[sb.limit()];
+        sb.get(samples);
+        currentSample = samples;
+    }
+
+
+    private void getAudioSample() throws IOException{
+        mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
+        InputStream is = new FileInputStream(mAudioFile);
+        byte[] data;
+        try {
+            data = IOUtils.toByteArray(is);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+        sampleByte = data;
+        ShortBuffer sb = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        short[] samples = new short[sb.limit()];
+        sb.get(samples);
+        sampleGlobal = samples;
+        currentSample = samples;
+    }
+
 
     private void startAudioRecordingSafe() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
@@ -121,101 +205,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
-        }
-    }
-
-    private void setWaveformView() {
-
-        short[] samples = null;
-        try {
-            samples = getAudioSample();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (samples != null) {
-
-
-            mPlaybackThread = new PlaybackThread(samples, new PlaybackListener() {
-                @Override
-                public void onProgress(int progress) {
-                    mPlaybackView.setMarkerPosition(progress);
-                }
-                @Override
-                public void onCompletion() {
-                    mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
-                }
-            });
-            mPlaybackView.setChannels(1);
-            mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
-            mPlaybackView.setSamples(samples);
-
-            mPlaybackView.invalidate();
-        }
-    }
-
-    private short[] getAudioSample() throws IOException{
-        mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
-        InputStream is = new FileInputStream(mAudioFile);
-        byte[] data;
-        try {
-            data = IOUtils.toByteArray(is);
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-
-        ShortBuffer sb = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
-        short[] samples = new short[sb.limit()];
-        sb.get(samples);
-        return samples;
-    }
-
-    private short[] getBeepedAudio(int start, int length) throws IOException {
-        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
-        InputStream is = new FileInputStream(newFile);
-        byte[] data;
-        try {
-            data = IOUtils.toByteArray(is);
-            for (int i = start; i < length; i++) {
-                if (i <= data.length) {
-                    data[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
-                }
-
-            }
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-
-        ShortBuffer sb = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
-        short[] samples = new short[sb.limit()];
-        sb.get(samples);
-        return samples;
-    }
-
-    private void updateWaveformView(short[] samples) {
-
-        if (samples != null) {
-
-
-            mPlaybackThread = new PlaybackThread(samples, new PlaybackListener() {
-                @Override
-                public void onProgress(int progress) {
-                    mPlaybackView.setMarkerPosition(progress);
-                }
-                @Override
-                public void onCompletion() {
-                    mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
-                }
-            });
-            mPlaybackView.setChannels(1);
-            mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
-            mPlaybackView.setSamples(samples);
-
-            mPlaybackView.invalidate();
         }
     }
 

@@ -39,7 +39,7 @@
             android:textOff="@string/start_recording"
             android:textOn="@string/stop_recording" />
 
-        <ToggleButton
+        <Button
             android:id="@+id/playBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
