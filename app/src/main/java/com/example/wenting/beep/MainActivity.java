@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
-        layout.setBackgroundColor(Color.BLACK);
         layout.addView(rangeSeekBar);
 
     }
