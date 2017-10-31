@@ -9,6 +9,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.support.design.widget.Snackbar;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
@@ -34,21 +35,30 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_RECORD_AUDIO = 13;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final RangeSeekBar<Integer> rangeSeekBar = new RangeSeekBar<>(this);
+        rangeSeekBar.setRangeValues(0, 100);
+
+
+        FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
+        layout.addView(rangeSeekBar);
+
+
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
-        final ToggleButton playButt = (ToggleButton) findViewById(R.id.playBtn);
+        final Button playButt = (Button) findViewById(R.id.playBtn);
 
         final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
         final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBeep);
 
         mRecordingThread = new RecordingThread(this);
-
 
 
         recordButt.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +90,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 short[] newSample = null;
                 try {
-                    newSample = getBeepedAudio(0, 100000);
+                    int start = rangeSeekBar.getSelectedMinValue();
+                    int end = rangeSeekBar.getSelectedMaxValue();
+                    newSample = getBeepedAudio(start, end);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -89,12 +101,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        RangeSeekBar<Integer> rangeSeekBar = new RangeSeekBar<>(this);
-        rangeSeekBar.setRangeValues(0, 100);
 
-
-        FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
-        layout.addView(rangeSeekBar);
 
     }
 
@@ -144,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCompletion() {
                     mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
+
                 }
             });
             mPlaybackView.setChannels(1);
@@ -172,17 +180,16 @@ public class MainActivity extends AppCompatActivity {
         return samples;
     }
 
-    private short[] getBeepedAudio(int start, int length) throws IOException {
+    private short[] getBeepedAudio(int start, int end) throws IOException {
         File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
         InputStream is = new FileInputStream(newFile);
         byte[] data;
         try {
             data = IOUtils.toByteArray(is);
-            for (int i = start; i < length; i++) {
-                if (i <= data.length) {
-                    data[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
-                }
-
+            int startIndex = Math.round(data.length * start / 100);
+            int endIndex = Math.round(data.length * end / 100);
+            for (int i = startIndex; i < endIndex; i++) {
+                data[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
             }
         } finally {
             if (is != null) {
