@@ -39,6 +39,14 @@
             android:textOff="@string/start_playing"
             android:textOn="@string/stop_playing" />
 
+        <ToggleButton
+            android:id="@+id/addBeep"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/add_beep"
+            android:textOff="@string/add_beep"
+            android:textOn="@string/add_beep" />
+
     </LinearLayout>
 
 

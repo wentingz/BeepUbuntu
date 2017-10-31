@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
         final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
+        final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBeep);
 
         mRecordingThread = new RecordingThread(this);
 
@@ -70,6 +71,20 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        beepBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                short[] newSample = null;
+                try {
+                    newSample = getBeepedAudio(0, 100000);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                updateWaveformView(newSample);
+            }
+        });
+
 
 
     }
@@ -146,6 +161,53 @@ public class MainActivity extends AppCompatActivity {
         short[] samples = new short[sb.limit()];
         sb.get(samples);
         return samples;
+    }
+
+    private short[] getBeepedAudio(int start, int length) throws IOException {
+        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
+        InputStream is = new FileInputStream(newFile);
+        byte[] data;
+        try {
+            data = IOUtils.toByteArray(is);
+            for (int i = start; i < length; i++) {
+                if (i <= data.length) {
+                    data[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
+                }
+
+            }
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+
+        ShortBuffer sb = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        short[] samples = new short[sb.limit()];
+        sb.get(samples);
+        return samples;
+    }
+
+    private void updateWaveformView(short[] samples) {
+
+        if (samples != null) {
+
+
+            mPlaybackThread = new PlaybackThread(samples, new PlaybackListener() {
+                @Override
+                public void onProgress(int progress) {
+                    mPlaybackView.setMarkerPosition(progress);
+                }
+                @Override
+                public void onCompletion() {
+                    mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
+                }
+            });
+            mPlaybackView.setChannels(1);
+            mPlaybackView.setSampleRate(PlaybackThread.SAMPLE_RATE);
+            mPlaybackView.setSamples(samples);
+
+            mPlaybackView.invalidate();
+        }
     }
 
 }
