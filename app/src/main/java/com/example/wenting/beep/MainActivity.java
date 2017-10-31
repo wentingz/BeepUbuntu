@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
         final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
-        final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBeep);
+        final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBleep);
 
         mRecordingThread = new RecordingThread(this);
 
@@ -206,6 +206,8 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
         }
+        ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
+        recordButt.setChecked(false);
     }
 
 }
