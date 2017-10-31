@@ -1,6 +1,7 @@
 package com.example.wenting.beep;
 
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -8,9 +9,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.support.design.widget.Snackbar;
+import android.widget.FrameLayout;
 import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
+import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,6 +89,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        RangeSeekBar<Integer> rangeSeekBar = new RangeSeekBar<>(this);
+        rangeSeekBar.setRangeValues(0, 100);
+
+
+        FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
+        layout.setBackgroundColor(Color.BLACK);
+        layout.addView(rangeSeekBar);
 
     }
 
