@@ -43,12 +43,10 @@
             android:id="@+id/playBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/start_playing"
-            android:textOff="@string/start_playing"
-            android:textOn="@string/stop_playing" />
+            android:text="@string/start_playing" />
 
         <ToggleButton
-            android:id="@+id/addBeep"
+            android:id="@+id/addBleep"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/add_beep"
