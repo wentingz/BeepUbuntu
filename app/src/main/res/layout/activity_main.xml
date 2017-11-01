@@ -27,13 +27,13 @@
 
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom">
 
         <ToggleButton
             android:id="@+id/recordBtn"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/start_recording"
             android:textOff="@string/start_recording"
@@ -41,17 +41,21 @@
 
         <Button
             android:id="@+id/playBtn"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/start_playing" />
 
-        <ToggleButton
+        <Button
             android:id="@+id/addBleep"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/add_beep"
-            android:textOff="@string/add_beep"
-            android:textOn="@string/add_beep" />
+            android:text="@string/add_beep"/>
+
+        <Button
+            android:id="@+id/rmvBleep"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rmv_beep"/>
 
     </LinearLayout>
 
