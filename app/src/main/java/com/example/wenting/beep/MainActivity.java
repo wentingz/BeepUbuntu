@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
@@ -125,13 +126,14 @@ public class MainActivity extends AppCompatActivity {
             mPlaybackThread = new PlaybackThread(playbackShort, new PlaybackListener() {
                 @Override
                 public void onProgress(int progress) {
-                    mPlaybackView.setMarkerPosition(progress);
+                    int startOffset = Math.round(mPlaybackView.getAudioLength() *
+                            rangeSeekBar.getSelectedMinValue() / 100);
+                    mPlaybackView.setMarkerPosition(startOffset + progress);
                 }
 
                 @Override
                 public void onCompletion() {
                     mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
-
                 }
             });
         }
