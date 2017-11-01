@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
 
 import static java.util.Arrays.copyOfRange;
 
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     short[] sampleGlobal;
     short[] currentSample;
     byte[]  sampleByte;
+    int volumn;
 
 
     @Override
@@ -154,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         int startIndex = Math.round(sampleByte.length * start / 100);
         int endIndex = Math.round(sampleByte.length * end / 100);
         for (int i = startIndex; i < endIndex; i++) {
-            sampleByte[i] = (byte) Math.round(50 * Math.sin(i * 6.3 / 50));
+            sampleByte[i] = (byte) Math.round(volumn * Math.sin(i * 6.3 / 50));
         }
 
         ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
@@ -176,7 +178,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         sampleByte = data;
-        ShortBuffer sb = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+
+        byte[] data2 = data.clone();
+        Arrays.sort(data2);
+        int index = (int) Math.round(data2.length * 0.9);
+        volumn = (int) Math.round(data2[index] * 0.7);
+
+        ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
         short[] samples = new short[sb.limit()];
         sb.get(samples);
         sampleGlobal = samples;
