@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     short[] sampleGlobal;
     short[] currentSample;
     byte[]  sampleByte;
+    byte[]  sampleByteGlobal;
     int volumn;
 
 
@@ -64,7 +65,9 @@ public class MainActivity extends AppCompatActivity {
 
         final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
-        final ToggleButton beepBtn = (ToggleButton) findViewById(R.id.addBleep);
+        final Button beepBtn = (Button) findViewById(R.id.addBleep);
+
+        final Button unbleepBtn = (Button) findViewById(R.id.rmvBleep);
 
         mRecordingThread = new RecordingThread(this);
 
@@ -106,6 +109,22 @@ public class MainActivity extends AppCompatActivity {
                     int start = rangeSeekBar.getSelectedMinValue();
                     int end = rangeSeekBar.getSelectedMaxValue();
                     getBeepedAudio(start, end);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                setWaveformView(currentSample);
+                rangeSeekBar.setSelectedMaxValue(100);
+                rangeSeekBar.setSelectedMinValue(0);
+            }
+        });
+
+        unbleepBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    int start = rangeSeekBar.getSelectedMinValue();
+                    int end = rangeSeekBar.getSelectedMaxValue();
+                    getUnbeepedAudio(start, end);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -165,6 +184,21 @@ public class MainActivity extends AppCompatActivity {
         currentSample = samples;
     }
 
+    private void getUnbeepedAudio(int start, int end) throws IOException {
+        int startIndex = Math.round(sampleGlobal.length * start / 100);
+        int endIndex = Math.round(sampleGlobal.length * end / 100);
+        for (int i = startIndex; i < endIndex; i++) {
+            currentSample[i] = sampleGlobal[i];
+        }
+
+        int startByte = Math.round(sampleByte.length * start / 100);
+        int endByte = Math.round(sampleByte.length * end / 100);
+        for (int i = startByte; i < endByte; i++) {
+            sampleByte[i] = sampleByteGlobal[i];
+        }
+
+    }
+
 
     private void getAudioSample() throws IOException{
         mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
@@ -178,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         sampleByte = data;
+        sampleByteGlobal = data.clone();
 
         byte[] data2 = data.clone();
         Arrays.sort(data2);
@@ -187,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
         ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
         short[] samples = new short[sb.limit()];
         sb.get(samples);
-        sampleGlobal = samples;
+        sampleGlobal = samples.clone();
         currentSample = samples;
     }
 
