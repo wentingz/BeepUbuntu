@@ -87,11 +87,14 @@ public class MainActivity extends AppCompatActivity {
         share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                File audioPath = new File(getApplicationContext().getFilesDir(), "audio");
-//                if (!audioPath.exists()) {
-//                    audioPath.mkdirs();
-//                }
-                File newFile = new File("/data/data/com.example.wenting.beep/files/audio/final.pcm");
+                File audioPath = new File(getApplicationContext().getFilesDir(), "audio");
+                if (!audioPath.exists()) {
+                    audioPath.mkdirs();
+                }
+
+//                File newFile = new File("/data/data/com.example.wenting.beep/files/final.pcm");
+//                File newFile = new File(getApplicationContext().getFilesDir(), "final.pcm");
+                File newFile = new File(audioPath, "final.pcm");
 
                 if (newFile == null) {
                     Log.e("final", "file is null");
@@ -124,9 +127,10 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//                shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 shareIntent.setType("audio/*");
 
-                Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), "com.myfileprovider", newFile);
+                Uri contentUri = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID, newFile);
 
 
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
