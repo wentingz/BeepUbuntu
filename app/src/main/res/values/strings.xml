@@ -5,5 +5,7 @@
     <string name="start_playing">Play</string>
     <string name="add_beep">Bleep</string>
     <string name="rmv_beep">Unbleep</string>
+    <string name="speech">Speech</string>
+    <string name="share">Share</string>
 
 </resources>

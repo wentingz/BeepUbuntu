@@ -1,10 +1,14 @@
 package com.example.wenting.beep;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +23,8 @@ import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -46,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     byte[]  sampleByteGlobal;
     int volumn;
 
+    private SpeechService  mSpeechService;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +78,68 @@ public class MainActivity extends AppCompatActivity {
 
         final Button unbleepBtn = (Button) findViewById(R.id.rmvBleep);
 
+        final Button speech = (Button) findViewById(R.id.speech);
+
+        final Button share = (Button) findViewById(R.id.share);
+
         mRecordingThread = new RecordingThread(this);
 
         mAudioFile = null;
 
+
+        share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                File audioPath = new File(getApplicationContext().getFilesDir(), "audio");
+                if (!audioPath.exists()) {
+                    audioPath.mkdirs();
+                }
+
+                File newFile = new File(audioPath, "final.pcm");
+
+                FileOutputStream os = null;
+
+                try {
+                    os = new FileOutputStream(newFile);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+
+
+                try {
+                    byte bData[] = sampleByteGlobal;
+                    os.write(bData);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("audio/*");
+
+                Uri contentUri = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID, newFile);
+
+
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                startActivity(Intent.createChooser(shareIntent, "share"));
+            }
+        });
+
+
+        speech.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         recordButt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -249,6 +315,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void getAudioSample() throws IOException{
         mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
+        if (mAudioFile == null) {
+            Log.e("demo", "file is null");
+        }
         InputStream is = new FileInputStream(mAudioFile);
         byte[] data;
         try {
