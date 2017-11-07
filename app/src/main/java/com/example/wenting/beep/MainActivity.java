@@ -17,6 +17,10 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
@@ -52,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     byte[]  sampleByteGlobal;
     int volumn;
 
+    private AdView mAdView;
+
+
     private SpeechService  mSpeechService;
 
 
@@ -85,6 +92,15 @@ public class MainActivity extends AppCompatActivity {
         mRecordingThread = new RecordingThread(this);
 
         mAudioFile = null;
+
+        MobileAds.initialize(this, "ca-app-pub-1230113270016669~5290316014");
+
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("EFE1F03989E81FBC17BB6C96B8F9F66C")
+                .build();
+        mAdView.loadAd(adRequest);
+
 
 
         share.setOnClickListener(new View.OnClickListener() {
