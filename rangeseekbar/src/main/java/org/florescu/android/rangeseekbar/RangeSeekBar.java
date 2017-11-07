@@ -626,7 +626,7 @@ public class RangeSeekBar<T extends Number> extends ImageView {
         }
 //        padding = internalPad + minMaxLabelSize + thumbHalfWidth;
 
-        padding = 0;
+        padding = 10;
 
         // draw seek bar background line
         rect.left = padding;

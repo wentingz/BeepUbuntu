@@ -11,6 +11,7 @@ import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
         mRecordingThread = new RecordingThread(this);
 
+        mAudioFile = null;
+
 
         recordButt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,6 +96,15 @@ public class MainActivity extends AppCompatActivity {
         playButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (mRecordingThread.recording()){
+                    recordButt.performClick();
+                }
+
+                if (mAudioFile == null) {
+                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 updatePlaySample(currentSample);
                 if (!mPlaybackThread.playing()) {
                     mPlaybackThread.startPlayback();
@@ -105,6 +117,20 @@ public class MainActivity extends AppCompatActivity {
         beepBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (mRecordingThread.recording()){
+                    recordButt.performClick();
+                    Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (mPlaybackThread.playing()) {
+                    mPlaybackThread.stopPlayback();
+                    Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (mAudioFile == null) {
+                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 try {
                     int start = rangeSeekBar.getSelectedMinValue();
                     int end = rangeSeekBar.getSelectedMaxValue();
@@ -121,6 +147,22 @@ public class MainActivity extends AppCompatActivity {
         unbleepBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (mRecordingThread.recording()){
+                    recordButt.performClick();
+                    Toast.makeText(MainActivity.this, "Please select the portion to unbleep.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (mPlaybackThread.playing()) {
+                    mPlaybackThread.stopPlayback();
+                    Toast.makeText(MainActivity.this, "Please select the portion to unbleep.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (mAudioFile == null) {
+                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 try {
                     int start = rangeSeekBar.getSelectedMinValue();
                     int end = rangeSeekBar.getSelectedMaxValue();
