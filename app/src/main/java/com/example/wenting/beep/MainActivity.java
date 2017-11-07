@@ -122,15 +122,18 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                if (mAudioFile == null) {
+                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (mPlaybackThread.playing()) {
                     mPlaybackThread.stopPlayback();
                     Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (mAudioFile == null) {
-                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+
                 try {
                     int start = rangeSeekBar.getSelectedMinValue();
                     int end = rangeSeekBar.getSelectedMaxValue();
@@ -153,16 +156,18 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
+                if (mAudioFile == null) {
+                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (mPlaybackThread.playing()) {
                     mPlaybackThread.stopPlayback();
                     Toast.makeText(MainActivity.this, "Please select the portion to unbleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (mAudioFile == null) {
-                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+
                 try {
                     int start = rangeSeekBar.getSelectedMinValue();
                     int end = rangeSeekBar.getSelectedMaxValue();
