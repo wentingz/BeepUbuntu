@@ -1,20 +1,26 @@
 package com.example.wenting.beep;
 
+import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
@@ -51,7 +57,40 @@ public class MainActivity extends AppCompatActivity {
     byte[]  sampleByteGlobal;
     int volumn;
 
+    private TextView mText;
+
     private SpeechService  mSpeechService;
+
+    private final SpeechService.Listener mSpeechServiceListener =
+            new SpeechService.Listener() {
+                @Override
+                public void onSpeechRecognized(final String text, final boolean isFinal) {
+                    Log.e("text", text);
+                    if (mText != null && !TextUtils.isEmpty(text)) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mText.setText(text);
+                            }
+                        });
+                    }
+                }
+            };
+
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder binder) {
+            mSpeechService = SpeechService.from(binder);
+            mSpeechService.addListener(mSpeechServiceListener);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mSpeechService = null;
+        }
+
+    };
 
 
     @Override
@@ -82,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
         final Button share = (Button) findViewById(R.id.share);
 
         mRecordingThread = new RecordingThread(this);
+
+        mText = (TextView) findViewById(R.id.text);
 
 
         share.setOnClickListener(new View.OnClickListener() {
@@ -134,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         speech.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
             }
         });
 
@@ -200,6 +241,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Prepare Cloud Speech API
+        bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
+
+    }
+
+    @Override
+    protected void onStop() {
+        // Stop Cloud Speech API
+        mSpeechService.removeListener(mSpeechServiceListener);
+        unbindService(mServiceConnection);
+        mSpeechService = null;
+
+        super.onStop();
     }
 
     private void updatePlaySample(short[] samples) {
