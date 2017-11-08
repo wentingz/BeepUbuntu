@@ -96,4 +96,5 @@ task copySecretKey(type: Copy) {
     into 'src/main/res/raw'
     rename secretKey.getName(), "credential.json"
 }
+
 preBuild.dependsOn(copySecretKey)
