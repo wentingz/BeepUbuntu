@@ -13,91 +13,97 @@
         android:text= "@string/speechText" />
 
 
-    <LinearLayout
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1">>
+
+        <com.newventuresoftware.waveform.WaveformView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:mode="PLAYBACK"
+            app:waveformStrokeThickness="3"
+            app:waveformColor="#e5dc33"
+            app:waveformFillColor="#e93519"
+            android:background="#000000"
+            android:id="@+id/playbackWaveformView" />
 
         <FrameLayout
+            android:id="@+id/seekbar_placeholder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
 
-            <com.newventuresoftware.waveform.WaveformView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                app:mode="PLAYBACK"
-                app:waveformStrokeThickness="3"
-                app:waveformColor="#e5dc33"
-                app:waveformFillColor="#e93519"
-                android:background="#000000"
-                android:id="@+id/playbackWaveformView" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/playFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@android:drawable/ic_media_play"
+            android:visibility="gone"/>
 
-            <FrameLayout
-                android:id="@+id/seekbar_placeholder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@android:drawable/presence_audio_online"/>
 
-        </FrameLayout>
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@android:drawable/presence_audio_online"
+            android:visibility="gone"/>
 
-    </LinearLayout>
+    </FrameLayout>
 
 
 
     <LinearLayout
+
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        >
 
         <LinearLayout
+            android:id ="@+id/buttonLayout"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ToggleButton
-            android:id="@+id/recordBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_recording"
-            android:textOff="@string/start_recording"
-            android:textOn="@string/stop_recording" />
-
-        <Button
-            android:id="@+id/playBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_playing" />
+        android:layout_height="wrap_content"
+            android:visibility="gone">
 
         <Button
             android:id="@+id/addBleep"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="@string/add_beep"/>
 
         <Button
             android:id="@+id/rmvBleep"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="@string/rmv_beep"/>
 
-        </LinearLayout>
 
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/share"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/share"/>
+        <Button
+            android:id="@+id/share"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/share"/>
 
         </LinearLayout>
-
 
 
 
@@ -106,8 +112,6 @@
             android:id="@+id/adView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
             android:layout_gravity="top"
             ads:adSize="BANNER"
             ads:adUnitId="ca-app-pub-1230113270016669/3510330487">
