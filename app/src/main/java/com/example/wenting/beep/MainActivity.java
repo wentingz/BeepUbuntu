@@ -1,8 +1,6 @@
 package com.example.wenting.beep;
 
-import android.Manifest;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -32,10 +30,9 @@ import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -132,8 +129,6 @@ public class MainActivity extends AppCompatActivity {
 
         mText = (TextView) findViewById(R.id.text);
 
-        mAudioFile = null;
-
         MobileAds.initialize(this, "ca-app-pub-1230113270016669~5290316014");
 
         mAdView = (AdView) findViewById(R.id.adView);
@@ -153,31 +148,21 @@ public class MainActivity extends AppCompatActivity {
                     audioPath.mkdirs();
                 }
 
-                File newFile = new File(audioPath, "final.pcm");
+                File newFile = new File(audioPath, "final.m4a");
 
-                FileOutputStream os = null;
+                InputStream is = new ByteArrayInputStream(sampleByte);
 
+
+                PCMEncoder pcmEncoder = new PCMEncoder(16000, 44100, 1);
+                pcmEncoder.setOutputPath(newFile.getAbsolutePath());
+                pcmEncoder.prepare();
                 try {
-                    os = new FileOutputStream(newFile);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-
-
-                try {
-                    byte bData[] = sampleByteGlobal;
-                    os.write(bData);
+                    pcmEncoder.encode(is, 44100);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                pcmEncoder.stop();
 
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("audio/*");
