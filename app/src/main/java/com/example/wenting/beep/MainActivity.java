@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mText;
     private AdView mAdView;
+    FloatingActionButton playButt;
 
 
     private SpeechService  mSpeechService;
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
-        final Button playButt = (Button) findViewById(R.id.playBtn);
+//        final Button playButt = (Button) findViewById(R.id.playBtn);
 
 //        final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         final Button share = (Button) findViewById(R.id.share);
 
         final FloatingActionButton recordButt = (FloatingActionButton) findViewById(R.id.fab);
-//        final FloatingActionButton playButt = (FloatingActionButton) findViewById(R.id.playFab);
+        playButt = (FloatingActionButton) findViewById(R.id.playFab);
 
 
         mRecordingThread = new RecordingThread(this);
@@ -194,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 //                    speechRecognize();
                     setWaveformView(currentSample);
+                    updatePlaySample(currentSample);
                     recordButt.setImageResource(android.R.drawable.presence_audio_online);
 
                 }
@@ -212,14 +214,15 @@ public class MainActivity extends AppCompatActivity {
 //                    return;
 //                }
 
-                updatePlaySample(currentSample);
+
                 if (!mPlaybackThread.playing()) {
+                    updatePlaySample(currentSample);
                     mPlaybackThread.startPlayback();
-//                    playButt.setImageResource(android.R.drawable.ic_media_pause);
+                    playButt.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
                     Log.e("stop!", "playback");
                     mPlaybackThread.stopPlayback();
-//                    playButt.setImageResource(android.R.drawable.ic_media_play);
+                    playButt.setImageResource(android.R.drawable.ic_media_play);
                 }
             }
         });
@@ -337,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCompletion() {
                     mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
-                    //                    playButt.setImageResource(android.R.drawable.ic_media_play);
+                    playButt.performClick();
                 }
             });
         }
@@ -437,8 +440,8 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
         }
-        ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
-        recordButt.setChecked(false);
+        FloatingActionButton recordButt = (FloatingActionButton) findViewById(R.id.fab);
+        recordButt.setImageResource(android.R.drawable.presence_audio_online);
     }
 
 }
