@@ -20,9 +20,9 @@ import android.support.design.widget.Snackbar;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
     int volumn;
 
     private TextView mText;
-    private AdView mAdView;
     FloatingActionButton playButt;
+
 
 
     private SpeechService  mSpeechService;
@@ -115,9 +115,6 @@ public class MainActivity extends AppCompatActivity {
 
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
 
-//        final Button playButt = (Button) findViewById(R.id.playBtn);
-
-//        final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
         final Button beepBtn = (Button) findViewById(R.id.addBleep);
 
@@ -126,7 +123,12 @@ public class MainActivity extends AppCompatActivity {
         final Button share = (Button) findViewById(R.id.share);
 
         final FloatingActionButton recordButt = (FloatingActionButton) findViewById(R.id.fab);
+
+        final FloatingActionButton recordButtLeft = (FloatingActionButton) findViewById(R.id.record);
+
         playButt = (FloatingActionButton) findViewById(R.id.playFab);
+
+        final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.buttonLayout);
 
 
         mRecordingThread = new RecordingThread(this);
@@ -135,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
         MobileAds.initialize(this, "ca-app-pub-1230113270016669~5290316014");
 
-        mAdView = (AdView) findViewById(R.id.adView);
+        AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder()
                 .addTestDevice("EFE1F03989E81FBC17BB6C96B8F9F66C")
                 .build();
@@ -180,6 +182,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        recordButtLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (!mRecordingThread.recording()) {
+                    startAudioRecordingSafe();
+                    recordButtLeft.setImageResource(android.R.drawable.presence_busy);
+                } else {
+                    mRecordingThread.stopRecording();
+                    try {
+                        getAudioSample();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+//                    speechRecognize();
+                    setWaveformView(currentSample);
+                    updatePlaySample(currentSample);
+                    recordButtLeft.setImageResource(android.R.drawable.presence_audio_online);
+                }
+            }
+        });
+
         recordButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -196,7 +220,10 @@ public class MainActivity extends AppCompatActivity {
 //                    speechRecognize();
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
-                    recordButt.setImageResource(android.R.drawable.presence_audio_online);
+                    recordButt.setVisibility(View.GONE);
+                    recordButtLeft.setVisibility(View.VISIBLE);
+                    playButt.setVisibility(View.VISIBLE);
+                    linearLayout.setVisibility(View.VISIBLE);
 
                 }
             }
@@ -205,22 +232,15 @@ public class MainActivity extends AppCompatActivity {
         playButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if (mRecordingThread.recording()){
-//                    recordButt.performClick();
-//                }
-//
-//                if (mAudioFile == null) {
-//                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-//                    return;
-//                }
-
+                if (mRecordingThread.recording()){
+                    recordButtLeft.performClick();
+                }
 
                 if (!mPlaybackThread.playing()) {
                     updatePlaySample(currentSample);
                     mPlaybackThread.startPlayback();
                     playButt.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
-                    Log.e("stop!", "playback");
                     mPlaybackThread.stopPlayback();
                     playButt.setImageResource(android.R.drawable.ic_media_play);
                 }
@@ -231,18 +251,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mRecordingThread.recording()){
-                    recordButt.performClick();
+                    recordButtLeft.performClick();
                     Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (mAudioFile == null) {
-                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
                 if (mPlaybackThread.playing()) {
-                    mPlaybackThread.stopPlayback();
+                    playButt.performClick();
                     Toast.makeText(MainActivity.this, "Please select the portion to bleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -264,18 +279,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mRecordingThread.recording()){
-                    recordButt.performClick();
+                    recordButtLeft.performClick();
                     Toast.makeText(MainActivity.this, "Please select the portion to unbleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (mAudioFile == null) {
-                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
                 if (mPlaybackThread.playing()) {
-                    mPlaybackThread.stopPlayback();
+                    playButt.performClick();
                     Toast.makeText(MainActivity.this, "Please select the portion to unbleep.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -388,17 +398,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void getAudioSample() throws IOException{
         mAudioFile = new File(getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "Demo.pcm");
-        if (mAudioFile == null) {
-            Log.e("demo", "file is null");
-        }
         InputStream is = new FileInputStream(mAudioFile);
         byte[] data;
         try {
             data = IOUtils.toByteArray(is);
         } finally {
-            if (is != null) {
-                is.close();
-            }
+            is.close();
         }
         sampleByte = data;
         sampleByteGlobal = data.clone();
