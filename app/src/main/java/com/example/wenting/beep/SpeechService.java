@@ -302,7 +302,7 @@ public class SpeechService extends Service {
                             .setConfig(RecognitionConfig.newBuilder()
                                     .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
                                     .setLanguageCode("en-US")
-                                    .setSampleRateHertz(16000)
+                                    .setSampleRateHertz(44100)
                                     .setEnableWordTimeOffsets(true)
                                     .build())
                             .setAudio(RecognitionAudio.newBuilder()
