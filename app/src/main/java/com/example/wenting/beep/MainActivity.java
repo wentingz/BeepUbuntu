@@ -121,8 +121,6 @@ public class MainActivity extends AppCompatActivity {
 
         final Button unbleepBtn = (Button) findViewById(R.id.rmvBleep);
 
-        final Button speech = (Button) findViewById(R.id.speech);
-
         final Button share = (Button) findViewById(R.id.share);
 
         mRecordingThread = new RecordingThread(this);
@@ -176,14 +174,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        speech.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
-            }
-        });
-
         recordButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -196,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
+                    speechRecognize();
                     setWaveformView(currentSample);
                 }
             }
@@ -289,7 +279,11 @@ public class MainActivity extends AppCompatActivity {
                 rangeSeekBar.setSelectedMinValue(0);
             }
         });
+    }
 
+    private void speechRecognize() {
+        InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
+        mSpeechService.recognizeInputStream(inputFile);
     }
 
     @Override
@@ -310,6 +304,8 @@ public class MainActivity extends AppCompatActivity {
 
         super.onStop();
     }
+
+
 
     private void updatePlaySample(short[] samples) {
         if (samples != null) {
