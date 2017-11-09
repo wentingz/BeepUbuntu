@@ -39,6 +39,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center" />
 
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/playFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:src="@android:drawable/ic_media_play" />
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:src="@android:drawable/presence_audio_online" />
+
         </FrameLayout>
 
     </LinearLayout>

@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -115,13 +116,17 @@ public class MainActivity extends AppCompatActivity {
 
         final Button playButt = (Button) findViewById(R.id.playBtn);
 
-        final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
+//        final ToggleButton recordButt = (ToggleButton) findViewById(R.id.recordBtn);
 
         final Button beepBtn = (Button) findViewById(R.id.addBleep);
 
         final Button unbleepBtn = (Button) findViewById(R.id.rmvBleep);
 
         final Button share = (Button) findViewById(R.id.share);
+
+        final FloatingActionButton recordButt = (FloatingActionButton) findViewById(R.id.fab);
+//        final FloatingActionButton playButt = (FloatingActionButton) findViewById(R.id.playFab);
+
 
         mRecordingThread = new RecordingThread(this);
 
@@ -179,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (!mRecordingThread.recording()) {
                     startAudioRecordingSafe();
+                    recordButt.setImageResource(android.R.drawable.presence_busy);
                 } else {
                     mRecordingThread.stopRecording();
                     try {
@@ -186,8 +192,10 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    speechRecognize();
+//                    speechRecognize();
                     setWaveformView(currentSample);
+                    recordButt.setImageResource(android.R.drawable.presence_audio_online);
+
                 }
             }
         });
@@ -195,20 +203,23 @@ public class MainActivity extends AppCompatActivity {
         playButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mRecordingThread.recording()){
-                    recordButt.performClick();
-                }
-
-                if (mAudioFile == null) {
-                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+//                if (mRecordingThread.recording()){
+//                    recordButt.performClick();
+//                }
+//
+//                if (mAudioFile == null) {
+//                    Toast.makeText(MainActivity.this, "Please record the audio first.", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
 
                 updatePlaySample(currentSample);
                 if (!mPlaybackThread.playing()) {
                     mPlaybackThread.startPlayback();
+//                    playButt.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
+                    Log.e("stop!", "playback");
                     mPlaybackThread.stopPlayback();
+//                    playButt.setImageResource(android.R.drawable.ic_media_play);
                 }
             }
         });
@@ -326,6 +337,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCompletion() {
                     mPlaybackView.setMarkerPosition(mPlaybackView.getAudioLength());
+                    //                    playButt.setImageResource(android.R.drawable.ic_media_play);
                 }
             });
         }
