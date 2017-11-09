@@ -5,28 +5,47 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
-
-
-    <com.newventuresoftware.waveform.WaveformView
+    <TextView
+        android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_weight= "1"
-        app:mode="PLAYBACK"
-        app:waveformStrokeThickness="3"
-        app:waveformColor="#e5dc33"
-        app:waveformFillColor="#e93519"
-        android:background="#000000"
-        android:id="@+id/playbackWaveformView" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:text= "Recoginzing..."/>
 
 
-
-    <FrameLayout
-        android:id="@+id/seekbar_placeholder"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.newventuresoftware.waveform.WaveformView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight= "1"
+                app:mode="PLAYBACK"
+                app:waveformStrokeThickness="3"
+                app:waveformColor="#e5dc33"
+                app:waveformFillColor="#e93519"
+                android:background="#000000"
+                android:id="@+id/playbackWaveformView" />
+
+            <FrameLayout
+                android:id="@+id/seekbar_placeholder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+
+
 
 
     <LinearLayout
@@ -86,15 +105,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/share"/>
 
-
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:text= "test"/>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -115,7 +127,6 @@
             </com.google.android.gms.ads.AdView>
 
         </LinearLayout>
-
 
 
 
