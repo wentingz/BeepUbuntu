@@ -43,12 +43,15 @@ import com.google.cloud.speech.v1.StreamingRecognitionConfig;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+import com.google.cloud.speech.v1.WordInfo;
 import com.google.protobuf.ByteString;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Array;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -107,6 +110,8 @@ public class SpeechService extends Service {
     private volatile AccessTokenTask mAccessTokenTask;
     private SpeechGrpc.SpeechStub mApi;
     private static Handler mHandler;
+    private ArrayList<Timestamp> wordTimestamp = new ArrayList<>();
+    private ArrayList<String> wordList = new ArrayList<>();
 
     private final StreamObserver<StreamingRecognizeResponse> mResponseObserver
             = new StreamObserver<StreamingRecognizeResponse>() {
@@ -151,6 +156,19 @@ public class SpeechService extends Service {
                 if (result.getAlternativesCount() > 0) {
                     final SpeechRecognitionAlternative alternative = result.getAlternatives(0);
                     text = alternative.getTranscript();
+                    wordTimestamp.clear();
+                    wordList.clear();
+                    for (WordInfo wordInfo: alternative.getWordsList()) {
+                        String word = wordInfo.getWord();
+                        long startsec = wordInfo.getStartTime().getSeconds();
+                        int startnano = wordInfo.getStartTime().getNanos();
+                        long endsec = wordInfo.getEndTime().getSeconds();
+                        int endnano = wordInfo.getEndTime().getNanos();
+                        wordList.add(word);
+                        wordTimestamp.add(new Timestamp(startsec, startnano, endsec, endnano));
+//                        Log.e(word, Long.toString(startsec) + "s" + Integer.toString(startnano));
+//                        Log.e("nano", Long.toString(startsec * 1000000000 + startnano));
+                    }
                 }
             }
             if (text != null) {
@@ -495,6 +513,14 @@ public class SpeechService extends Service {
             return headers;
         }
 
+    }
+
+    public ArrayList<String> getWordList() {
+        return wordList;
+    }
+
+    public ArrayList<Timestamp> getWordTimestamp() {
+        return wordTimestamp;
     }
 
 }

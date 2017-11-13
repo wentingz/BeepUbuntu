@@ -27,6 +27,7 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.common.collect.ImmutableSet;
 import com.newventuresoftware.waveform.WaveformView;
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
@@ -39,6 +40,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static java.util.Arrays.copyOfRange;
@@ -64,6 +66,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView mText;
     FloatingActionButton playButt;
 
+    long audioLength;
+    static ImmutableSet<String> sBadWords = new ImmutableSet.Builder<String>()
+            .add("great")
+            .build();
+
+
 
 
     private SpeechService  mSpeechService;
@@ -74,10 +82,13 @@ public class MainActivity extends AppCompatActivity {
                 public void onSpeechRecognized(final String text, final boolean isFinal) {
                     Log.e("text", text);
                     if (mText != null && !TextUtils.isEmpty(text)) {
+                        getSenseredWord();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 mText.setText(text);
+                                setWaveformView(currentSample);
+                                updatePlaySample(currentSample);
                             }
                         });
                     }
@@ -196,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    speechRecognize();
+                    speechRecognize();
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
                     recordButtLeft.setImageResource(android.R.drawable.presence_audio_online);
@@ -217,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    speechRecognize();
+                    speechRecognize();
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
                     recordButt.setVisibility(View.GONE);
@@ -305,6 +316,35 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void getSenseredWord() {
+        ArrayList<String> words = mSpeechService.getWordList();
+        if (words == null) {
+            Log.e("no words", "!");
+        }
+        ArrayList<Timestamp> timestamps = mSpeechService.getWordTimestamp();
+        for (int i = 0; i < words.size(); i++) {
+            Log.e("word", words.get(i));
+            if (sBadWords.contains(words.get(i))) {
+                Timestamp target = timestamps.get(i);
+
+                Log.e("startTime", "" + target.getStartTime());
+                Log.e("endTime", "" + target.getEndTime());
+
+                Log.e("length", "" + audioLength);
+                try {
+                    getBeepedAudioDouble(target.getStartTime(),target.getEndTime());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    private double calculateAudioLength(int samplesCount, int sampleRate) {
+        return (double) samplesCount / sampleRate;
+    }
+
     private void speechRecognize() {
         InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
         mSpeechService.recognizeInputStream(inputFile);
@@ -353,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
                     playButt.performClick();
                 }
             });
+            audioLength = Math.round(calculateAudioLength(samples.length, 44100) * 1000000000);
         }
     }
 
@@ -365,6 +406,22 @@ public class MainActivity extends AppCompatActivity {
             mPlaybackView.invalidate();
         }
     }
+
+    private void getBeepedAudioDouble(double start, double end) throws IOException {
+        int startIndex = (int) Math.round(sampleByte.length * start / audioLength);
+        int endIndex = (int) Math.round(sampleByte.length * end / audioLength);
+        Log.e("startInd", "" + Math.round(sampleByte.length * start / audioLength));
+        Log.e("endInd", "" + Math.round(sampleByte.length * end / audioLength));
+        for (int i = startIndex; i < endIndex; i++) {
+            sampleByte[i] = (byte) Math.round(volumn * Math.sin(i * 6.3 / 50));
+        }
+
+        ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        short[] samples = new short[sb.limit()];
+        sb.get(samples);
+        currentSample = samples;
+    }
+
 
 
     private void getBeepedAudio(int start, int end) throws IOException {
