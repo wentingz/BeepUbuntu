@@ -42,6 +42,8 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.Arrays.copyOfRange;
 
@@ -141,6 +143,18 @@ public class MainActivity extends AppCompatActivity {
 
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.buttonLayout);
 
+        final Button test = (Button) findViewById(R.id.test);
+
+
+        test.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v) {
+                Map<String, String> postData = new HashMap<>();
+                postData.put("message", "test");
+                HttpPostAsyncTask task = new HttpPostAsyncTask(postData);
+                task.execute("https://us-central1-bleep-1509582925468.cloudfunctions.net/hello");
+            }
+        });
 
         mRecordingThread = new RecordingThread(this);
 
