@@ -29,6 +29,9 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.common.collect.ImmutableSet;
 import com.newventuresoftware.waveform.WaveformView;
+import com.wenting.web.bleep.servlet.WordTimestampObject;
+import com.wenting.web.bleep.servlet.Timestamp;
+
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
@@ -37,17 +40,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+
+
 
 import static java.util.Arrays.copyOfRange;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private PlaybackThread mPlaybackThread;
     private RecordingThread mRecordingThread;
 
@@ -73,44 +77,62 @@ public class MainActivity extends AppCompatActivity {
             .add("great")
             .build();
 
+    WordTimestampObject returnedOutput;
 
+    @Override
+    public void processFinish(WordTimestampObject output){
+        returnedOutput = output;
 
-
-    private SpeechService  mSpeechService;
-
-    private final SpeechService.Listener mSpeechServiceListener =
-            new SpeechService.Listener() {
+        if (mText != null && !TextUtils.isEmpty(returnedOutput.getWordList().toString())) {
+            getSenseredWord();
+            runOnUiThread(new Runnable() {
                 @Override
-                public void onSpeechRecognized(final String text, final boolean isFinal) {
-                    Log.e("text", text);
-                    if (mText != null && !TextUtils.isEmpty(text)) {
-                        getSenseredWord();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mText.setText(text);
-                                setWaveformView(currentSample);
-                                updatePlaySample(currentSample);
-                            }
-                        });
-                    }
+                public void run() {
+                    mText.setText(returnedOutput.getWordList().toString());
+                    setWaveformView(currentSample);
+                    updatePlaySample(currentSample);
                 }
-            };
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder binder) {
-            mSpeechService = SpeechService.from(binder);
-            mSpeechService.addListener(mSpeechServiceListener);
+            });
         }
+    }
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mSpeechService = null;
-        }
 
-    };
+
+//    private SpeechService  mSpeechService;
+//
+//    private final SpeechService.Listener mSpeechServiceListener =
+//            new SpeechService.Listener() {
+//                @Override
+//                public void onSpeechRecognized(final String text, final boolean isFinal) {
+//                    Log.e("text", text);
+//                    if (mText != null && !TextUtils.isEmpty(text)) {
+//                        getSenseredWord();
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                mText.setText(text);
+//                                setWaveformView(currentSample);
+//                                updatePlaySample(currentSample);
+//                            }
+//                        });
+//                    }
+//                }
+//            };
+//
+//    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+//
+//        @Override
+//        public void onServiceConnected(ComponentName componentName, IBinder binder) {
+//            mSpeechService = SpeechService.from(binder);
+//            mSpeechService.addListener(mSpeechServiceListener);
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName componentName) {
+//            mSpeechService = null;
+//        }
+//
+//    };
 
 
     @Override
@@ -146,13 +168,16 @@ public class MainActivity extends AppCompatActivity {
         final Button test = (Button) findViewById(R.id.test);
 
 
+
         test.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View v) {
-                Map<String, String> postData = new HashMap<>();
-                postData.put("message", "test");
-                HttpPostAsyncTask task = new HttpPostAsyncTask(postData);
-                task.execute("https://us-central1-bleep-1509582925468.cloudfunctions.net/hello");
+                final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal, mText);
+                task.output = MainActivity.this;
+                String url = "http://192.168.86.69:8080/Bleep";
+                Log.e("url", url);
+                task.execute(url);
+
             }
         });
 
@@ -331,11 +356,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getSenseredWord() {
-        ArrayList<String> words = mSpeechService.getWordList();
+        ArrayList<String> words = returnedOutput.getWordList();
         if (words == null) {
             Log.e("no words", "!");
         }
-        ArrayList<Timestamp> timestamps = mSpeechService.getWordTimestamp();
+        ArrayList<Timestamp> timestamps = returnedOutput.getWordTimestamp();
         for (int i = 0; i < words.size(); i++) {
             Log.e("word", words.get(i));
             if (sBadWords.contains(words.get(i))) {
@@ -360,8 +385,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void speechRecognize() {
-        InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
-        mSpeechService.recognizeInputStream(inputFile);
+//        InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
+//        mSpeechService.recognizeInputStream(inputFile);
+
+        final Button test = (Button) findViewById(R.id.test);
+        test.performClick();
     }
 
     @Override
@@ -369,16 +397,16 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         // Prepare Cloud Speech API
-        bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
+//        bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
 
     }
 
     @Override
     protected void onStop() {
         // Stop Cloud Speech API
-        mSpeechService.removeListener(mSpeechServiceListener);
-        unbindService(mServiceConnection);
-        mSpeechService = null;
+//        mSpeechService.removeListener(mSpeechServiceListener);
+//        unbindService(mServiceConnection);
+//        mSpeechService = null;
 
         super.onStop();
     }
