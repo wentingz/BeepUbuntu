@@ -1,20 +1,16 @@
 package com.example.wenting.beep;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
@@ -97,44 +93,6 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     }
 
 
-
-//    private SpeechService  mSpeechService;
-//
-//    private final SpeechService.Listener mSpeechServiceListener =
-//            new SpeechService.Listener() {
-//                @Override
-//                public void onSpeechRecognized(final String text, final boolean isFinal) {
-//                    Log.e("text", text);
-//                    if (mText != null && !TextUtils.isEmpty(text)) {
-//                        getSenseredWord();
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                mText.setText(text);
-//                                setWaveformView(currentSample);
-//                                updatePlaySample(currentSample);
-//                            }
-//                        });
-//                    }
-//                }
-//            };
-//
-//    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-//
-//        @Override
-//        public void onServiceConnected(ComponentName componentName, IBinder binder) {
-//            mSpeechService = SpeechService.from(binder);
-//            mSpeechService.addListener(mSpeechServiceListener);
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName componentName) {
-//            mSpeechService = null;
-//        }
-//
-//    };
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -172,10 +130,9 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
         test.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View v) {
-                final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal, mText);
+                final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
                 task.output = MainActivity.this;
                 String url = "http://192.168.86.69:8080/Bleep";
-                Log.e("url", url);
                 task.execute(url);
 
             }
@@ -358,18 +315,12 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private void getSenseredWord() {
         ArrayList<String> words = returnedOutput.getWordList();
         if (words == null) {
-            Log.e("no words", "!");
+            return;
         }
         ArrayList<Timestamp> timestamps = returnedOutput.getWordTimestamp();
         for (int i = 0; i < words.size(); i++) {
-            Log.e("word", words.get(i));
             if (sBadWords.contains(words.get(i))) {
                 Timestamp target = timestamps.get(i);
-
-                Log.e("startTime", "" + target.getStartTime());
-                Log.e("endTime", "" + target.getEndTime());
-
-                Log.e("length", "" + audioLength);
                 try {
                     getBeepedAudioDouble(target.getStartTime(),target.getEndTime());
                 } catch (IOException e) {
@@ -385,30 +336,8 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     }
 
     private void speechRecognize() {
-//        InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
-//        mSpeechService.recognizeInputStream(inputFile);
-
         final Button test = (Button) findViewById(R.id.test);
         test.performClick();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Prepare Cloud Speech API
-//        bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
-
-    }
-
-    @Override
-    protected void onStop() {
-        // Stop Cloud Speech API
-//        mSpeechService.removeListener(mSpeechServiceListener);
-//        unbindService(mServiceConnection);
-//        mSpeechService = null;
-
-        super.onStop();
     }
 
 
@@ -452,8 +381,6 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private void getBeepedAudioDouble(double start, double end) throws IOException {
         int startIndex = (int) Math.round(sampleByte.length * start / audioLength);
         int endIndex = (int) Math.round(sampleByte.length * end / audioLength);
-        Log.e("startInd", "" + Math.round(sampleByte.length * start / audioLength));
-        Log.e("endInd", "" + Math.round(sampleByte.length * end / audioLength));
         for (int i = startIndex; i < endIndex; i++) {
             sampleByte[i] = (byte) Math.round(volumn * Math.sin(i * 6.3 / 50));
         }
