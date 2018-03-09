@@ -1,20 +1,16 @@
 package com.example.wenting.beep;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
@@ -27,7 +23,11 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.common.collect.ImmutableSet;
 import com.newventuresoftware.waveform.WaveformView;
+import com.wenting.web.bleep.servlet.WordTimestampObject;
+import com.wenting.web.bleep.servlet.Timestamp;
+
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
@@ -36,14 +36,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+
+
 
 import static java.util.Arrays.copyOfRange;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private PlaybackThread mPlaybackThread;
     private RecordingThread mRecordingThread;
 
@@ -64,40 +68,29 @@ public class MainActivity extends AppCompatActivity {
     private TextView mText;
     FloatingActionButton playButt;
 
+    long audioLength;
+    static ImmutableSet<String> sBadWords = new ImmutableSet.Builder<String>()
+            .add("great")
+            .build();
 
+    WordTimestampObject returnedOutput;
 
-    private SpeechService  mSpeechService;
+    @Override
+    public void processFinish(WordTimestampObject output){
+        returnedOutput = output;
 
-    private final SpeechService.Listener mSpeechServiceListener =
-            new SpeechService.Listener() {
+        if (mText != null && !TextUtils.isEmpty(returnedOutput.getWordList().toString())) {
+            getSenseredWord();
+            runOnUiThread(new Runnable() {
                 @Override
-                public void onSpeechRecognized(final String text, final boolean isFinal) {
-                    Log.e("text", text);
-                    if (mText != null && !TextUtils.isEmpty(text)) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mText.setText(text);
-                            }
-                        });
-                    }
+                public void run() {
+                    mText.setText(returnedOutput.getWordList().toString());
+                    setWaveformView(currentSample);
+                    updatePlaySample(currentSample);
                 }
-            };
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder binder) {
-            mSpeechService = SpeechService.from(binder);
-            mSpeechService.addListener(mSpeechServiceListener);
+            });
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mSpeechService = null;
-        }
-
-    };
+    }
 
 
     @Override
@@ -130,6 +123,20 @@ public class MainActivity extends AppCompatActivity {
 
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.buttonLayout);
 
+        final Button test = (Button) findViewById(R.id.test);
+
+
+
+        test.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v) {
+                final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
+                task.output = MainActivity.this;
+                String url = "http://192.168.86.69:8080/Bleep";
+                task.execute(url);
+
+            }
+        });
 
         mRecordingThread = new RecordingThread(this);
 
@@ -196,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    speechRecognize();
+                    speechRecognize();
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
                     recordButtLeft.setImageResource(android.R.drawable.presence_audio_online);
@@ -217,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    speechRecognize();
+                    speechRecognize();
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
                     recordButt.setVisibility(View.GONE);
@@ -305,28 +312,32 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void getSenseredWord() {
+        ArrayList<String> words = returnedOutput.getWordList();
+        if (words == null) {
+            return;
+        }
+        ArrayList<Timestamp> timestamps = returnedOutput.getWordTimestamp();
+        for (int i = 0; i < words.size(); i++) {
+            if (sBadWords.contains(words.get(i))) {
+                Timestamp target = timestamps.get(i);
+                try {
+                    getBeepedAudioDouble(target.getStartTime(),target.getEndTime());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    private double calculateAudioLength(int samplesCount, int sampleRate) {
+        return (double) samplesCount / sampleRate;
+    }
+
     private void speechRecognize() {
-        InputStream inputFile = new ByteArrayInputStream(sampleByteGlobal);
-        mSpeechService.recognizeInputStream(inputFile);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Prepare Cloud Speech API
-        bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
-
-    }
-
-    @Override
-    protected void onStop() {
-        // Stop Cloud Speech API
-        mSpeechService.removeListener(mSpeechServiceListener);
-        unbindService(mServiceConnection);
-        mSpeechService = null;
-
-        super.onStop();
+        final Button test = (Button) findViewById(R.id.test);
+        test.performClick();
     }
 
 
@@ -353,6 +364,7 @@ public class MainActivity extends AppCompatActivity {
                     playButt.performClick();
                 }
             });
+            audioLength = Math.round(calculateAudioLength(samples.length, 44100) * 1000000000);
         }
     }
 
@@ -365,6 +377,20 @@ public class MainActivity extends AppCompatActivity {
             mPlaybackView.invalidate();
         }
     }
+
+    private void getBeepedAudioDouble(double start, double end) throws IOException {
+        int startIndex = (int) Math.round(sampleByte.length * start / audioLength);
+        int endIndex = (int) Math.round(sampleByte.length * end / audioLength);
+        for (int i = startIndex; i < endIndex; i++) {
+            sampleByte[i] = (byte) Math.round(volumn * Math.sin(i * 6.3 / 50));
+        }
+
+        ShortBuffer sb = ByteBuffer.wrap(sampleByte).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        short[] samples = new short[sb.limit()];
+        sb.get(samples);
+        currentSample = samples;
+    }
+
 
 
     private void getBeepedAudio(int start, int end) throws IOException {
