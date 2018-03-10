@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -78,13 +79,20 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     @Override
     public void processFinish(WordTimestampObject output){
         returnedOutput = output;
+        ArrayList<String> words = returnedOutput.getWordList();
+        StringBuilder sb = new StringBuilder(words.size());
+        for (int i = 0; i < words.size(); i++) {
+            sb.append(words.get(i));
+            sb.append(" ");
+        }
+        final String transcript = sb.toString();
 
-        if (mText != null && !TextUtils.isEmpty(returnedOutput.getWordList().toString())) {
+        if (mText != null && !TextUtils.isEmpty(transcript)) {
             getSenseredWord();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mText.setText(returnedOutput.getWordList().toString());
+                    mText.setText(transcript);
                     setWaveformView(currentSample);
                     updatePlaySample(currentSample);
                 }
@@ -123,20 +131,6 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
 
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.buttonLayout);
 
-        final Button test = (Button) findViewById(R.id.test);
-
-
-
-        test.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v) {
-                final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
-                task.output = MainActivity.this;
-                String url = "http://192.168.86.69:8080/Bleep";
-                task.execute(url);
-
-            }
-        });
 
         mRecordingThread = new RecordingThread(this);
 
@@ -336,8 +330,10 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     }
 
     private void speechRecognize() {
-        final Button test = (Button) findViewById(R.id.test);
-        test.performClick();
+        final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
+        task.output = MainActivity.this;
+        String url = "http://192.168.86.69:8080/Bleep";
+        task.execute(url);
     }
 
 
