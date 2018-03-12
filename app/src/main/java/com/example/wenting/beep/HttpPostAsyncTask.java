@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import com.wenting.web.bleep.servlet.WordTimestampObject;
+import com.wenting.dataObjects.WordTimestampObject;
 
 
 

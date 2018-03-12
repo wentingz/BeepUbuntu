@@ -25,8 +25,8 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.common.collect.ImmutableSet;
 import com.newventuresoftware.waveform.WaveformView;
-import com.wenting.web.bleep.servlet.WordTimestampObject;
-import com.wenting.web.bleep.servlet.Timestamp;
+import com.wenting.dataObjects.WordTimestampObject;
+import com.wenting.dataObjects.Timestamp;
 
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
@@ -40,7 +40,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -332,7 +331,8 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private void speechRecognize() {
         final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
         task.output = MainActivity.this;
-        String url = "http://192.168.86.69:8080/Bleep";
+        //String url = "http://192.168.86.69:8080/Bleep";
+        String url = "http://bleep-1509582925468.appspot.com/bleep";
         task.execute(url);
     }
 
