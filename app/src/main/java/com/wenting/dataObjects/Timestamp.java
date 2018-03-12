@@ -1,4 +1,4 @@
-package com.wenting.web.bleep.servlet;
+package com.wenting.dataObjects;
 
 /**
  * Created by wenting on 3/9/18.
