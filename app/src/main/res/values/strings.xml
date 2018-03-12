@@ -1,11 +1,14 @@
 <resources>
-    <string name="app_name">Bleep</string>
-    <string name="start_recording">Record</string>
-    <string name="stop_recording">Stop</string>
-    <string name="start_playing">Play</string>
-    <string name="add_beep">Bleep</string>
-    <string name="rmv_beep">Unbleep</string>
-    <string name="speechText">Waiting for audio input...</string>
-    <string name="share">Share</string>
+<string name="app_name">Bleep</string>
+<string name="start_recording">Record</string>
+<string name="stop_recording">Stop</string>
+<string name="start_playing">Play</string>
+<string name="add_beep">Bleep</string>
+<string name="rmv_beep">Unbleep</string>
+<string name="speechText">Waiting for audio input...</string>
+<string name="share">Share</string>
+<string name="addNewWord">Add Censored Word</string>
+<string name="aboutUS">About Us</string>
+
 
 </resources>

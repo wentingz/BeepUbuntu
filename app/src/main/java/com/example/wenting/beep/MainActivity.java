@@ -11,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
@@ -40,7 +42,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -70,11 +71,39 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     FloatingActionButton playButt;
 
     long audioLength;
+
+
     static ImmutableSet<String> sBadWords = new ImmutableSet.Builder<String>()
             .add("great")
             .build();
 
     WordTimestampObject returnedOutput;
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_word:
+                Intent  addCensoredWordIntent = new Intent(this, AddCensoredWordsActivity.class);
+                startActivity(addCensoredWordIntent);
+                return true;
+
+            case R.id.menu_item_about_us:
+                Intent displayMessageIntent = new Intent(this, DisplayMessageActivity.class);
+                startActivity(displayMessageIntent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     public void processFinish(WordTimestampObject output){
@@ -135,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
         mRecordingThread = new RecordingThread(this);
 
         mText = (TextView) findViewById(R.id.text);
+
 
         MobileAds.initialize(this, "ca-app-pub-1230113270016669~5290316014");
 
@@ -332,7 +362,8 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private void speechRecognize() {
         final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
         task.output = MainActivity.this;
-        String url = "http://192.168.86.69:8080/Bleep";
+        //String url = "http://192.168.86.69:8080/Bleep";
+        String url = "http://192.168.86.69:8080/bleep";
         task.execute(url);
     }
 
