@@ -18,7 +18,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">>
+        android:layout_weight="1">
 
         <com.newventuresoftware.waveform.WaveformView
             android:layout_width="match_parent"
@@ -107,17 +107,16 @@
         </LinearLayout>
 
 
-
         <com.google.android.gms.ads.AdView
             xmlns:ads="http://schemas.android.com/apk/res-auto"
             android:id="@+id/adView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            ads:adSize="BANNER"
+            ads:adSize="SMART_BANNER"
             ads:adUnitId="ca-app-pub-1230113270016669/3510330487">
-
         </com.google.android.gms.ads.AdView>
+
+
 
 
 

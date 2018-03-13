@@ -5,10 +5,15 @@
 <string name="start_playing">Play</string>
 <string name="add_beep">Bleep</string>
 <string name="rmv_beep">Unbleep</string>
-<string name="speechText">Waiting for audio input...</string>
+<string name="speechText">Waiting for audio input</string>
 <string name="share">Share</string>
 <string name="addNewWord">Add Censored Word</string>
 <string name="aboutUS">About Us</string>
+<string name="add">add</string>
+<string name="hint">use space to separate multiple words</string>
+<string name="intro">Developed by: Wenting Zhou \n
+Email: zhouwentingzj@gmail.com \n
+Website: wentingzhou.com </string>
 
 
 </resources>

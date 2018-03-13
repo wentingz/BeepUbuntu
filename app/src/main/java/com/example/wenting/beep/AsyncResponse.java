@@ -1,6 +1,6 @@
 package com.example.wenting.beep;
 
-import com.wenting.web.bleep.servlet.WordTimestampObject;
+import com.wenting.dataObjects.WordTimestampObject;
 
 /**
  * Created by wenting on 3/9/18.

@@ -17,117 +17,59 @@ import android.view.View;
 import android.support.design.widget.Snackbar;
 import android.widget.Button;
 import android.widget.FrameLayout;
-
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
-import com.google.common.collect.ImmutableSet;
 import com.newventuresoftware.waveform.WaveformView;
-import com.wenting.web.bleep.servlet.WordTimestampObject;
-import com.wenting.web.bleep.servlet.Timestamp;
-
+import com.wenting.dataObjects.CensoredWords;
+import com.wenting.dataObjects.WordTimestampObject;
+import com.wenting.dataObjects.Timestamp;
 import org.apache.commons.io.IOUtils;
 import org.florescu.android.rangeseekbar.RangeSeekBar;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.HashSet;
 
 
 import static java.util.Arrays.copyOfRange;
 
 public class MainActivity extends AppCompatActivity implements AsyncResponse {
+
+    static final int UPDATE_WORDS_REQUEST = 1;
     private PlaybackThread mPlaybackThread;
     private RecordingThread mRecordingThread;
-
     File mAudioFile;
-
     WaveformView mPlaybackView;
-
     private static final int REQUEST_RECORD_AUDIO = 13;
-
     RangeSeekBar<Integer> rangeSeekBar;
-
     short[] sampleGlobal;
     short[] currentSample;
     byte[]  sampleByte;
     byte[]  sampleByteGlobal;
     int volumn;
-
     private TextView mText;
     FloatingActionButton playButt;
-
     long audioLength;
-
-
-    static ImmutableSet<String> sBadWords = new ImmutableSet.Builder<String>()
-            .add("great")
-            .build();
-
+    CensoredWords censoredWordsList = null;
     WordTimestampObject returnedOutput;
+    final private String SERVER_ADDRESS = "http://bleep-1509582925468.appspot.com/bleep";
 
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_item_new_word:
-                Intent  addCensoredWordIntent = new Intent(this, AddCensoredWordsActivity.class);
-                startActivity(addCensoredWordIntent);
-                return true;
-
-            case R.id.menu_item_about_us:
-                Intent displayMessageIntent = new Intent(this, DisplayMessageActivity.class);
-                startActivity(displayMessageIntent);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void processFinish(WordTimestampObject output){
-        returnedOutput = output;
-        ArrayList<String> words = returnedOutput.getWordList();
-        StringBuilder sb = new StringBuilder(words.size());
-        for (int i = 0; i < words.size(); i++) {
-            sb.append(words.get(i));
-            sb.append(" ");
-        }
-        final String transcript = sb.toString();
-
-        if (mText != null && !TextUtils.isEmpty(transcript)) {
-            getSenseredWord();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mText.setText(transcript);
-                    setWaveformView(currentSample);
-                    updatePlaySample(currentSample);
-                }
-            });
-        }
-    }
 
 
     @Override
@@ -138,44 +80,28 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
         rangeSeekBar = new RangeSeekBar<>(this);
         rangeSeekBar.setRangeValues(0, 100);
 
-
         FrameLayout layout = (FrameLayout) findViewById(R.id.seekbar_placeholder);
         layout.addView(rangeSeekBar);
-
-
         mPlaybackView = (WaveformView) findViewById(R.id.playbackWaveformView);
-
-
         final Button beepBtn = (Button) findViewById(R.id.addBleep);
-
         final Button unbleepBtn = (Button) findViewById(R.id.rmvBleep);
-
         final Button share = (Button) findViewById(R.id.share);
-
         final FloatingActionButton recordButt = (FloatingActionButton) findViewById(R.id.fab);
-
         final FloatingActionButton recordButtLeft = (FloatingActionButton) findViewById(R.id.record);
-
         playButt = (FloatingActionButton) findViewById(R.id.playFab);
-
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.buttonLayout);
-
-
         mRecordingThread = new RecordingThread(this);
-
         mText = (TextView) findViewById(R.id.text);
 
 
         MobileAds.initialize(this, "ca-app-pub-1230113270016669~5290316014");
-
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice("EFE1F03989E81FBC17BB6C96B8F9F66C")
                 .build();
         mAdView.loadAd(adRequest);
 
 
-
+        initiateCensoredWordsList();
 
         share.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -336,14 +262,113 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
         });
     }
 
-    private void getSenseredWord() {
+    private void initiateCensoredWordsList() {
+        File filePath = new File(getApplicationContext().getFilesDir(), "audio");
+        if (!filePath.exists()) {
+            filePath.mkdirs();
+        }
+
+        File newFile = new File(filePath, "censoredWords.txt");
+        FileOutputStream outputStream;
+        ObjectOutputStream oos = null;
+        try {
+
+            if (!newFile.exists()) {
+                outputStream = new FileOutputStream(newFile);
+                oos = new ObjectOutputStream(outputStream);
+                censoredWordsList = new CensoredWords();
+                oos.writeObject(censoredWordsList);
+                oos.flush();
+                oos.close();
+
+            } else {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(newFile));
+                censoredWordsList = (CensoredWords) ois.readObject();
+                if (censoredWordsList == null) {
+                    censoredWordsList = new CensoredWords();
+                    outputStream = new FileOutputStream(newFile);
+                    oos = new ObjectOutputStream(outputStream);
+                    oos.writeObject(censoredWordsList);
+                    oos.flush();
+                    oos.close();
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_word:
+                Intent  addCensoredWordIntent = new Intent(this, AddCensoredWordsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("list", censoredWordsList);
+                addCensoredWordIntent.putExtras(bundle);
+                startActivityForResult(addCensoredWordIntent, UPDATE_WORDS_REQUEST);
+                return true;
+            case R.id.menu_item_about_us:
+                Intent displayMessageIntent = new Intent(this, DisplayMessageActivity.class);
+                startActivity(displayMessageIntent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == UPDATE_WORDS_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Bundle bundle = intent.getExtras();
+                censoredWordsList = (CensoredWords) bundle.getSerializable("list");
+            }
+        }
+    }
+
+    @Override
+    public void processFinish(WordTimestampObject output){
+        returnedOutput = output;
+        ArrayList<String> words = returnedOutput.getWordList();
+        StringBuilder sb = new StringBuilder(words.size());
+        for (int i = 0; i < words.size(); i++) {
+            sb.append(words.get(i));
+            sb.append(" ");
+        }
+        final String transcript = sb.toString();
+
+        if (mText != null && !TextUtils.isEmpty(transcript)) {
+            getCensoredWord();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mText.setText(transcript);
+                    setWaveformView(currentSample);
+                    updatePlaySample(currentSample);
+                }
+            });
+        }
+    }
+
+
+    private void getCensoredWord() {
         ArrayList<String> words = returnedOutput.getWordList();
         if (words == null) {
             return;
         }
         ArrayList<Timestamp> timestamps = returnedOutput.getWordTimestamp();
+        HashSet<String> sBadWords = censoredWordsList.getCensoredWordsHashSet();
         for (int i = 0; i < words.size(); i++) {
-            if (sBadWords.contains(words.get(i))) {
+            if (sBadWords.contains(words.get(i).toLowerCase())) {
                 Timestamp target = timestamps.get(i);
                 try {
                     getBeepedAudioDouble(target.getStartTime(),target.getEndTime());
@@ -352,7 +377,6 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
                 }
             }
         }
-
     }
 
     private double calculateAudioLength(int samplesCount, int sampleRate) {
@@ -362,9 +386,7 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
     private void speechRecognize() {
         final HttpPostAsyncTask task = new HttpPostAsyncTask(sampleByteGlobal);
         task.output = MainActivity.this;
-        //String url = "http://192.168.86.69:8080/Bleep";
-        String url = "http://192.168.86.69:8080/bleep";
-        task.execute(url);
+        task.execute(SERVER_ADDRESS);
     }
 
 
