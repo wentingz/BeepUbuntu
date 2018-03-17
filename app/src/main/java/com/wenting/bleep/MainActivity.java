@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements AsyncResponse {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        requestMicrophonePermission();
+
         rangeSeekBar = new RangeSeekBar<>(this);
         rangeSeekBar.setRangeValues(0, 100);
 
