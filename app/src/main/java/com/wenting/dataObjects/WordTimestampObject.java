@@ -4,6 +4,8 @@ package com.wenting.dataObjects;
  * Created by wenting on 3/9/18.
  */
 
+import com.wenting.dataObjects.Timestamp;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
