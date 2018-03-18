@@ -16,7 +16,7 @@ Record your sentences and have the app automatically bleep the censored words fo
 
 ## Authors
 
-* **Wenting Zhou** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Wenting Zhou**
 
 See also another APP I made: [Fanfou](https://github.com/zjlszsy/fanfouandroid) - an Android client for social network Fanfou.com.
 
